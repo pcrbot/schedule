@@ -78,7 +78,7 @@ def return_schedule():
     for _ in range(data['calendar_days']):
         for i in data['schedule_data']:
             if i['year'] == year and i['month'] == month:
-                print(t, '====', i['year'], '====', i['month'])
+                
                 for key in day_key:
                     if i['day'][day][key] != '':
 
