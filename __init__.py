@@ -111,7 +111,9 @@ def return_schedule(calendar_days=data['calendar_days']):
 
         t += datetime.timedelta(days=1)  # 改为下一天的日期
         year, month, day = str(t).split("-")  # 分割年月日
-        
+        if int(day) < 10:  
+            day = day[1]
+
         activity_info_list = []
         info_list = []
 
