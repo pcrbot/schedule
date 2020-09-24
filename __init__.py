@@ -14,7 +14,8 @@ data = {
 }
 
 # day_key里保存的是每天的信息分类，"qdhd"是多倍掉落庆典，"tdz"是公会战，
-# "tbhd"是公会之家家具上架，"jqhd"是活动地图，"jssr"是角色生日
+# "tbhd"是登录奖励，赛马或者公会之家家具限时上架等其他活动，
+# "jqhd"是活动地图，"jssr"是角色生日
 # 你可以自定义这个列表，删掉不想看到的活动
 day_key = ["qdhd", "tdz", "tbhd", "jqhd", "jssr"]
 
@@ -97,11 +98,12 @@ def refresh_schedule():
 
 def return_schedule(calendar_days=data['calendar_days']):
     # 返回日程表信息
+    # calendar_days参数表示返回多少天的日程
 
     t = datetime.date.today()  # 要读取的日期
     year, month, day = str(t).split("-")  # 分割年月日
     
-    if int(day) < 10:  
+    if int(day) < 10:  #日期小于10的时候去掉日期十位数的0
         day = day[1]
 
     activity_info_list = []
@@ -137,7 +139,4 @@ def return_schedule(calendar_days=data['calendar_days']):
 
     # 返回活动信息字符串
     return infos
-
-
-
 
