@@ -21,7 +21,7 @@ day_key = ["qdhd", "tdz", "tbhd", "jqhd", "jssr"]
 
 sv = Service('日程表')
 
-@sv.on_fullmatch(('国服日程表','日程表'))
+@sv.on_fullmatch(('国服日程表','日程表','一周日程'))
 async def Schedule(bot, ev):
     # 调用的时候比对上次爬取日程表时间，不是今天就重新爬取日程表，是今天就直接返回
 
@@ -36,7 +36,25 @@ async def Schedule(bot, ev):
     else:
         await bot.send(ev, return_schedule())
 
+        
+        
+@sv.on_fullmatch(('月日程','一月日程'))
+async def Schedule(bot, ev):
+    # 调用的时候比对上次爬取日程表时间，不是今天就重新爬取日程表，是今天就直接返回
 
+    if data['Refresh_date'] != str(datetime.date.today()):
+
+        status = refresh_schedule()
+        if not status[0]:
+            await bot.send(ev, f'刷新日程表失败，错误代码{status[1]}')
+            return
+        data['Refresh_date'] = str(datetime.date.today())  # 爬取时间改为今天
+        await bot.send(ev, return_schedule(30))
+    else:
+        await bot.send(ev, return_schedule(30))
+
+        
+        
 @sv.on_fullmatch('刷新日程表')
 async def re_Schedule(bot, ev):
     status = refresh_schedule()
@@ -103,7 +121,7 @@ def return_schedule(calendar_days=data['calendar_days']):
                     activity_info_list = [info[13:-6] for info in info_list]#去掉每条信息前后的正则匹配参数，只保留活动信息
 
                 if not activity_info_list:#如果列表是空的
-                    activity_info_list[0] = '没有活动信息'
+                    activity_info_list.append('没有活动信息')
 
                 infos += '=======' + str(t).replace("-", "年", 1).replace("-", "月", 1) + '日' + '=======\n'
                 for i in activity_info_list:
@@ -119,5 +137,7 @@ def return_schedule(calendar_days=data['calendar_days']):
 
     # 返回活动信息字符串
     return infos
+
+
 
 
