@@ -20,42 +20,42 @@ data = {
 day_key = ["qdhd", "tdz", "tbhd", "jqhd", "jssr"]
 
 
+command = {
+    #  这个字典保存key的是所有日程表指令
+    #  value保存的是指令对应返回的日程天数
+    #  由于所有查询日程的指令除了天数外其他逻辑相同，就不需要每个指令一个函数了
+    
+    '国服日程表':data['calendar_days'],
+    '一周日程':data['calendar_days'],
+    '月日程':30,
+    '一月日程':30,
+    '今日活动':1,
+    '日程':1,
+    '今日日程':1
+}
+
+
 sv = Service('日程表')
 
-@sv.on_fullmatch(('国服日程表','日程表','一周日程'))
+@sv.on_fullmatch(command.keys())
 async def Schedule(bot, ev):
     # 调用的时候比对上次爬取日程表时间，不是今天就重新爬取日程表，是今天就直接返回
+    msg = ev['prefix']
 
-    if data['Refresh_date'] != str(datetime.date.today()):
-
+    if data['Refresh_date'] != str(datetime.date.today()): #  检查今天是否刷新过日程表
         status = refresh_schedule()
         if not status[0]:
             await bot.send(ev, f'刷新日程表失败，错误代码{status[1]}')
             return
         data['Refresh_date'] = str(datetime.date.today())  # 爬取时间改为今天
-        await bot.send(ev, return_schedule())
+
+        await bot.send(ev, return_schedule(command[msg]))
     else:
-        await bot.send(ev, return_schedule())
+        await bot.send(ev, return_schedule(command[msg]))
 
-        
-        
-@sv.on_fullmatch(('月日程','一月日程'))
-async def Schedule(bot, ev):
-    # 调用的时候比对上次爬取日程表时间，不是今天就重新爬取日程表，是今天就直接返回
 
-    if data['Refresh_date'] != str(datetime.date.today()):
 
-        status = refresh_schedule()
-        if not status[0]:
-            await bot.send(ev, f'刷新日程表失败，错误代码{status[1]}')
-            return
-        data['Refresh_date'] = str(datetime.date.today())  # 爬取时间改为今天
-        await bot.send(ev, return_schedule(30))
-    else:
-        await bot.send(ev, return_schedule(30))
 
-        
-        
 @sv.on_fullmatch('刷新日程表')
 async def re_Schedule(bot, ev):
     status = refresh_schedule()
@@ -66,33 +66,21 @@ async def re_Schedule(bot, ev):
         await bot.send(ev, f'刷新日程表失败，错误代码{status[1]}')
 
 
-@sv.on_fullmatch(('今日活动','日程','今日日程'))
-async def Schedule(bot, ev):
-
-    if data['Refresh_date'] != str(datetime.date.today()):
-        status = refresh_schedule()
-        if not status[0]:
-            await bot.send(ev, f'刷新日程表失败，错误代码{status[1]}')
-            return
-        data['Refresh_date'] = str(datetime.date.today())  # 爬取时间改为今天
-        await bot.send(ev, return_schedule(1))
-    else:
-        await bot.send(ev, return_schedule(1))
-
-
 
 def refresh_schedule():
-    # 刷新日程表
+    #  刷新日程表
+    #  这个函数会返回一个列表，列表第一个值是布尔值，表示爬取数据是否成功
+    #  如果爬取数据失败第二个值是HTTP状态码
     schedule = request.Request(URL)
     schedule.add_header('User-Agent', header)
 
     with request.urlopen(schedule) as f:
-        if f.code != 200:#检查返回的状态码是否是200
+        if f.code != 200:  # 检查返回的状态码是否是200
             return [False, f.code]
 
-        rew_data = f.read().decode('utf-8')#bytes类型转utf-8
+        rew_data = f.read().decode('utf-8')  # bytes类型转utf-8
 
-        data['schedule_data'] = json.loads(rew_data[152:-35])#去掉头尾没用的数据保存到'schedule_data'
+        data['schedule_data'] = json.loads(rew_data[152:-35])  # 去掉头尾没用的数据保存到'schedule_data'
         return [True, "ok"]
 
 
@@ -102,8 +90,8 @@ def return_schedule(calendar_days=data['calendar_days']):
 
     t = datetime.date.today()  # 要读取的日期
     year, month, day = str(t).split("-")  # 分割年月日
-    
-    if int(day) < 10:  #日期小于10的时候去掉日期十位数的0
+
+    if int(day) < 10:  # 日期小于10的时候去掉日期十位数的0
         day = day[1]
 
     activity_info_list = []
@@ -112,17 +100,17 @@ def return_schedule(calendar_days=data['calendar_days']):
 
     for _ in range(calendar_days):
         for i in data['schedule_data']:
-            if i['year'] == year and i['month'] == month:#官方数据每一个月份是一个列表，检查当前列表年月是否符合
-                if day in i['day']: #检查是否有查询日期当天的数据
+            if i['year'] == year and i['month'] == month:  # 官方数据每一个月份是一个列表，检查当前列表年月是否符合
+                if day in i['day']:  # 检查是否有查询日期当天的数据
                     for key in day_key:
-                        if i['day'][day][key] != '': #空的活动数据跳过
+                        if i['day'][day][key] != '':  # 空的活动数据跳过
 
-                            info_list.extend(re.findall("class='cl-t'>.+?</div>", i['day'][day][key]))#用正则截取活动信息
+                            info_list.extend(re.findall("class='cl-t'>.+?</div>", i['day'][day][key]))  # 用正则截取活动信息
 
-                if info_list:#如果列表不是空的
-                    activity_info_list = [info[13:-6] for info in info_list]#去掉每条信息前后的正则匹配参数，只保留活动信息
+                if info_list:  # 如果列表不是空的
+                    activity_info_list = [info[13:-6] for info in info_list]  # 去掉每条信息前后的正则匹配参数，只保留活动信息
 
-                if not activity_info_list:#如果列表是空的
+                if not activity_info_list:  # 如果列表是空的
                     activity_info_list.append('没有活动信息')
 
                 infos += '=======' + str(t).replace("-", "年", 1).replace("-", "月", 1) + '日' + '=======\n'
@@ -131,7 +119,7 @@ def return_schedule(calendar_days=data['calendar_days']):
 
         t += datetime.timedelta(days=1)  # 改为下一天的日期
         year, month, day = str(t).split("-")  # 分割年月日
-        if int(day) < 10:  
+        if int(day) < 10:
             day = day[1]
 
         activity_info_list = []
