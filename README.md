@@ -9,7 +9,7 @@
 ```
 hoshino/modules/schedule/schedule/__init__.py
 ```
-
+# 这个插件爬取的是官方日历，但是最近官方日历不更新了，建议不要使用这个插件了
 
 
 # 指令
