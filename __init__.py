@@ -79,8 +79,19 @@ def refresh_schedule():
             return [False, f.code]
 
         rew_data = f.read().decode('utf-8')  # bytes类型转utf-8
+        rew_data = rew_data[152:-36]
 
-        data['schedule_data'] = json.loads(rew_data[152:-35])  # 去掉头尾没用的数据保存到'schedule_data'
+        # 有的时候官方数据最后会多一个逗号导致json.load失败，这里处理一下
+        _bool = 1
+        while _bool :
+            if rew_data[-_bool] == '"':
+                _bool = 0
+                break
+            if rew_data[-_bool] == ',':
+                rew_data = rew_data[:-_bool] + rew_data[-(_bool-1):]
+            _bool += 1
+
+        data['schedule_data'] = json.loads(rew_data)  # 保存到'schedule_data'
         return [True, "ok"]
 
 
